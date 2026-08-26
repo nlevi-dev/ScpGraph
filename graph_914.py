@@ -337,33 +337,194 @@ G = G.subgraph(keep).copy()
 # BFS layers from target using reversed edges (ascendants by distance)
 rev = G.reverse()
 layers = defaultdict(set)
+layers_depth = {}  # node -> layer index (excludes Destroyed/Lost until assigned below)
 layers[0].add(target)
+layers_depth[target] = 0
 visited = {target}
 frontier = {target}
 depth = 0
+_specials = {"Destroyed", "Lost"}
 while frontier:
     depth += 1
     next_frontier = set()
     for node in frontier:
         for pred in rev.successors(node):
-            if pred not in visited:
+            if pred not in visited and pred not in _specials:
                 visited.add(pred)
                 layers[depth].add(pred)
+                layers_depth[pred] = depth
                 next_frontier.add(pred)
     frontier = next_frontier
 
-# Assign positions: target at top, layers below; Destroyed/Lost at bottom+1
-max_depth = max(layers.keys()) if layers else 0
+# Assign Destroyed/Lost to their own layers based on max predecessor depth + 1
 special_nodes = [n for n in ("Destroyed", "Lost") if n in G.nodes()]
-pos = {}
-for d, nodes in layers.items():
-    nodes = sorted(nodes)
-    for i, node in enumerate(nodes):
-        x = (i - (len(nodes) - 1) / 2) * 2.5
-        pos[node] = (x, -d * 2)
-for i, node in enumerate(special_nodes):
-    x = (i - (len(special_nodes) - 1) / 2) * 2.5
-    pos[node] = (x, -(max_depth + 1) * 2)
+for sp in special_nodes:
+    preds_in_layers = [layers_depth[u] for u, _ in G.in_edges(sp) if u in layers_depth]
+    sp_depth = (max(preds_in_layers) + 1) if preds_in_layers else (max(layers.keys()) + 1)
+    layers[sp_depth].add(sp)
+    layers_depth[sp] = sp_depth
+
+max_depth = max(layers.keys()) if layers else 0
+
+def _make_pos(layer_order):
+    p = {}
+    for d, ordered in layer_order.items():
+        for i, node in enumerate(ordered):
+            x = (i - (len(ordered) - 1) / 2) * 2.5
+            p[node] = (x, -d * 2)
+    return p
+
+# Initial layer ordering: sorted alphabetically
+layer_order = {d: sorted(nodes) for d, nodes in layers.items()}
+pos = _make_pos(layer_order)
+
+# ---------------------------------------------------------------------------
+# Layer-order optimisation: minimise weighted crossing cost
+# ---------------------------------------------------------------------------
+from itertools import permutations as _perms
+
+def _build_edge_pairs(G, layers_depth):
+    """
+    Precompute static per-edge data and all pairs that could cross.
+    Returns (node_layer, edge_nodes, edge_pairs) where:
+      node_layer[node] = (layer, is_lo)  -- which endpoint is the lower-layer one
+      edge_nodes[i] = (u, v) normalised so layers_depth[u] <= layers_depth[v]
+      edge_pairs = list of (i, j, hop, overlap_lo, overlap_hi, w) for pairs that can cross
+    """
+    # Deduplicated edge list, normalised lo->hi
+    seen = set()
+    edges = []  # (u, v, la, lb, hop)  la <= lb
+    for u, v, _ in G.edges(keys=True):
+        if u not in layers_depth or v not in layers_depth:
+            continue
+        key = (u, v)
+        if key in seen:
+            continue
+        seen.add(key)
+        la, lb = layers_depth[u], layers_depth[v]
+        if la > lb:
+            u, v, la, lb = v, u, lb, la
+        edges.append((u, v, la, lb, abs(lb - la)))
+
+    pairs = []
+    n = len(edges)
+    for i in range(n):
+        u1, v1, la1, lb1, hop1 = edges[i]
+        for j in range(i + 1, n):
+            u2, v2, la2, lb2, hop2 = edges[j]
+            hop = max(hop1, hop2)
+            if hop == 0:
+                continue  # same-layer pairs handled separately
+            if hop2 > hop1:
+                continue  # only count pair under the larger-hop edge
+            raw_lo = max(la1, la2)
+            raw_hi = min(lb1, lb2)
+            if raw_lo > raw_hi:
+                continue
+            union_lo = min(la1, la2)
+            union_hi = max(lb1, lb2)
+            overlap_lo = max(raw_lo - 0.5, union_lo)
+            overlap_hi = min(raw_hi + 0.5, union_hi)
+            if overlap_lo >= overlap_hi:
+                continue
+            pairs.append((i, j, hop1, la1, lb1, la2, lb2, overlap_lo, overlap_hi))
+
+    return edges, pairs
+
+
+def _cost_from_pos_x(pos_x, edges, pairs, layers):
+    """Compute crossing cost given pos_x dict. edges and pairs from _build_edge_pairs."""
+    total = 0.0
+    # Same-layer edges
+    for u, v, la, lb, hop in edges:
+        if hop == 0:
+            xa, xb = pos_x.get(u, 0), pos_x.get(v, 0)
+            total += max(0, abs(xa - xb) - 1)
+    # Crossing pairs
+    for i, j, hop, la1, lb1, la2, lb2, overlap_lo, overlap_hi in pairs:
+        u1, v1 = edges[i][0], edges[i][1]
+        u2, v2 = edges[j][0], edges[j][1]
+        xa1, xb1 = pos_x.get(u1, 0), pos_x.get(v1, 0)
+        xa2, xb2 = pos_x.get(u2, 0), pos_x.get(v2, 0)
+        def _x_at(exa, exb, ela, elb, d):
+            if ela == elb:
+                return (exa + exb) / 2
+            return exa + (exb - exa) * (d - ela) / (elb - ela)
+        x1a = _x_at(xa1, xb1, la1, lb1, overlap_lo)
+        x1b = _x_at(xa1, xb1, la1, lb1, overlap_hi)
+        x2a = _x_at(xa2, xb2, la2, lb2, overlap_lo)
+        x2b = _x_at(xa2, xb2, la2, lb2, overlap_hi)
+        if (x1a - x2a) * (x1b - x2b) < 0:
+            total += 1.0 / hop
+    return total
+
+
+def _crossing_cost(layer_order, G, layers_depth):
+    edges, pairs = _build_edge_pairs(G, layers_depth)
+    pos_x = {n: i for d, ordered in layer_order.items() for i, n in enumerate(ordered)}
+    return _cost_from_pos_x(pos_x, edges, pairs, layer_order)
+
+
+def _optimise_layout(layer_order, G, layers_depth, n_restarts=10, max_passes=10):
+    sorted_depths = sorted(layer_order.keys())
+    n_layers = len(sorted_depths)
+    BRUTE_THRESH = 5
+    edges, pairs = _build_edge_pairs(G, layers_depth)
+
+    def _cost(lo):
+        pos_x = {n: i for d, ordered in lo.items() for i, n in enumerate(ordered)}
+        return _cost_from_pos_x(pos_x, edges, pairs, lo)
+
+    def _one_run(lo):
+        lo = {d: list(v) for d, v in lo.items()}
+        best_cost = _cost(lo)
+        for _pass in range(max_passes):
+            prev_cost = best_cost
+            for wi in range(n_layers - 1):
+                da, db = sorted_depths[wi], sorted_depths[wi + 1]
+                if len(lo[da]) <= BRUTE_THRESH and len(lo[db]) <= BRUTE_THRESH:
+                    best_a, best_b = lo[da][:], lo[db][:]
+                    for pa in _perms(lo[da]):
+                        for pb in _perms(lo[db]):
+                            lo[da], lo[db] = list(pa), list(pb)
+                            c = _cost(lo)
+                            if c < best_cost:
+                                best_cost = c
+                                best_a, best_b = list(pa), list(pb)
+                    lo[da], lo[db] = best_a, best_b
+                else:
+                    improved = True
+                    while improved:
+                        improved = False
+                        for layer in (da, db):
+                            for ii in range(len(lo[layer])):
+                                for jj in range(ii + 1, len(lo[layer])):
+                                    lo[layer][ii], lo[layer][jj] = lo[layer][jj], lo[layer][ii]
+                                    c = _cost(lo)
+                                    if c < best_cost:
+                                        best_cost = c
+                                        improved = True
+                                    else:
+                                        lo[layer][ii], lo[layer][jj] = lo[layer][jj], lo[layer][ii]
+            if best_cost >= prev_cost:
+                break
+        return lo, best_cost
+
+    import random as _rand
+    best_lo = {d: list(v) for d, v in layer_order.items()}
+    best_cost = _cost(best_lo)
+    print(f"Layout optimisation: initial cost={best_cost:.3f}, {n_restarts} restarts...", flush=True)
+    for restart in range(n_restarts):
+        lo_init = {d: list(v) for d, v in layer_order.items()}
+        for d in lo_init:
+            _rand.shuffle(lo_init[d])
+        lo, cost = _one_run(lo_init)
+        print(f"  restart {restart+1}/{n_restarts}: cost={cost:.3f}", flush=True)
+        if cost < best_cost:
+            best_cost = cost
+            best_lo = lo
+    print(f"Layout optimisation done: best cost={best_cost:.3f}", flush=True)
+    return best_lo
 
 print(f"Computing reach ({len(G.nodes())} nodes, {G.number_of_edges()} edges)...", flush=True)
 # Iterative fixed-point: p[n] = sum(chance*(1-(1-p[dest])^count)), p[target]=1
@@ -480,7 +641,9 @@ if _arg_items is not None or _arg_steps is not None:
         # Recompute layers/pos after pruning
         rev = G.reverse()
         layers = defaultdict(set)
+        layers_depth = {}
         layers[0].add(target)
+        layers_depth[target] = 0
         visited = {target}
         frontier = {target}
         depth = 0
@@ -489,22 +652,20 @@ if _arg_items is not None or _arg_steps is not None:
             next_frontier = set()
             for node in frontier:
                 for pred in rev.successors(node):
-                    if pred not in visited:
+                    if pred not in visited and pred not in _specials:
                         visited.add(pred)
                         layers[depth].add(pred)
+                        layers_depth[pred] = depth
                         next_frontier.add(pred)
             frontier = next_frontier
-        max_depth = max(layers.keys()) if layers else 0
         special_nodes = [n for n in ("Destroyed", "Lost") if n in G.nodes()]
-        pos = {}
-        for d, nodes in layers.items():
-            nodes = sorted(nodes)
-            for i, node in enumerate(nodes):
-                x = (i - (len(nodes) - 1) / 2) * 2.5
-                pos[node] = (x, -d * 2)
-        for i, node in enumerate(special_nodes):
-            x = (i - (len(special_nodes) - 1) / 2) * 2.5
-            pos[node] = (x, -(max_depth + 1) * 2)
+        for sp in special_nodes:
+            preds_in_layers = [layers_depth[u] for u, _ in G.in_edges(sp) if u in layers_depth]
+            sp_depth = (max(preds_in_layers) + 1) if preds_in_layers else (max(layers.keys()) + 1)
+            layers[sp_depth].add(sp)
+            layers_depth[sp] = sp_depth
+        max_depth = max(layers.keys()) if layers else 0
+        layer_order = {d: sorted(nodes) for d, nodes in layers.items()}
         at_risk = {u for u, v in G.edges() if v in ("Destroyed", "Lost")}
         node_colors = []
         for n in G.nodes():
@@ -521,6 +682,9 @@ if _arg_items is not None or _arg_steps is not None:
         for u, v, _ in edge_list:
             pair_count[tuple(sorted((u, v)))] += 1
         all_pos_list = list(pos.values())
+
+layer_order = _optimise_layout(layer_order, G, layers_depth)
+pos = _make_pos(layer_order)
 
 print("Drawing...", flush=True)
 # Draw
@@ -581,23 +745,32 @@ def draw_gradient_edge(ax, p1, p2, color, ctrl=None, n_segments=30):
     ax.annotate("", xy=p2c, xytext=(xs[-2], ys[-2]),
                 arrowprops=dict(arrowstyle="->", color=tuple(base * 0.8), lw=1.5), zorder=1)
 
-def needs_bend(p1, p2, all_pos, tol=0.001):
-    """Return True if any other node lies on the straight line between p1 and p2."""
+def needs_bend(p1, p2, all_pos, fig, ax):
+    """Return True if any other node's circle (radius in data coords) intersects the line p1->p2."""
     direction = p2 - p1
     length = np.linalg.norm(direction)
     if length == 0:
         return False
     unit = direction / length
+    r_pts = np.sqrt(800 / np.pi)
+    r_inch = r_pts / 72
+    ax_w_inch = ax.get_position().width * fig.get_figwidth()
+    ax_h_inch = ax.get_position().height * fig.get_figheight()
+    x0, x1 = ax.get_xlim()
+    y0, y1 = ax.get_ylim()
+    rx = r_inch / ax_w_inch * (x1 - x0)
+    ry = r_inch / ax_h_inch * (y1 - y0)
     for q in all_pos:
         q = np.array(q)
         if np.allclose(q, p1) or np.allclose(q, p2):
             continue
-        # Project q onto the line p1->p2
         t = np.dot(q - p1, unit)
         if t <= 0 or t >= length:
             continue
         closest = p1 + t * unit
-        if np.linalg.norm(q - closest) < tol:
+        diff = q - closest
+        # Elliptical node: check if diff is within the node ellipse
+        if (diff[0] / rx) ** 2 + (diff[1] / ry) ** 2 < 1.0:
             return True
     return False
 
@@ -656,7 +829,8 @@ def redraw_edges(event=None):
             if norm > 0:
                 perp = perp / norm * 0.2 * (idx - (n-1)/2)
                 p1, p2 = p1 + perp, p2 + perp
-        ctrl = bend_ctrl(p1, p2, all_pos_list) if needs_bend(p1, p2, all_pos_list) else None
+        bidir = pair_count[canon] > 1
+        ctrl = bend_ctrl(p1, p2, all_pos_list) if (not bidir and needs_bend(p1, p2, all_pos_list, fig, ax)) else None
         draw_gradient_edge(ax, p1, p2, color, ctrl=ctrl)
     ax.plot = _orig_plot
     ax.annotate = _orig_annotate
