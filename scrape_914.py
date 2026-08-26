@@ -12,13 +12,15 @@ for table in soup.find_all("table"):
     headers = [th.get_text(strip=True) for th in table.find_all("th")]
     if headers[:6] == cols:
         prev = table.find_previous(["h2", "h3", "h4"])
-        admin_only = prev and "Remote Admin Only" in prev.get_text()
+        heading = prev.get_text(strip=True) if prev else "Miscellaneous"
+        admin_only = "Remote Admin Only" in heading
+        category = "Remote Admin Only Items" if admin_only else heading
         rows = []
         for tr in table.find_all("tr")[1:]:
             cells = [td.get_text(separator=", ", strip=True) for td in tr.find_all("td")]
             if cells:
-                rows.append(cells[:6] + [admin_only])
-        tables.append(pd.DataFrame(rows, columns=cols + ["admin_only"]))
+                rows.append(cells[:6] + [admin_only, category])
+        tables.append(pd.DataFrame(rows, columns=cols + ["admin_only", "category"]))
 
 pd.concat(tables, ignore_index=True).to_csv("914_outputs.csv", index=False)
 

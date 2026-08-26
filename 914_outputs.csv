@@ -1,63 +1,63 @@
-Input,Rough,Coarse,1:1,Fine,Very Fine,admin_only
-Janitor Keycard,Destroyed,Destroyed,Zone Manager Keycard,Scientist Keycard,"Scientist Keycard, (50%), Research Supervisor Keycard, (50%)",False
-Scientist Keycard,"Destroyed (50%), Janitor Keycard, (50%)",Janitor Keycard,Zone Manager Keycard,Research Supervisor Keycard,"Scientist Keycard, (33%), Research Supervisor Keycard, (33%), Facility Manager Keycard, (33%)",False
-Research Supervisor Keycard,"Janitor Keycard, (50%), Scientist Keycard, (50%)",Scientist Keycard,Guard Keycard,Facility Manager Keycard,"Research Supervisor Keycard, (50%), Facility Manager Keycard, (50%)",False
-Guard Keycard,"Janitor Keycard, (50%), Scientist Keycard, (50%)",Scientist Keycard,Research Supervisor Keycard,Operative Keycard,"Guard Keycard, (33%), Operative Keycard, (33%), Captain Keycard, (33%)",False
-Operative Keycard,"Guard Keycard, (50%), Destroyed (50%)",Guard Keycard,Facility Manager Keycard,Captain Keycard,"Operative Keycard, (33%), Captain Keycard, (33%), O5 Keycard, (33%)",False
-Captain Keycard,Operative Keycard,Operative Keycard,CI Access Device,O5 Keycard,"Destroyed (25%), O5 Keycard, (75%)",False
-Zone Manager Keycard,"Janitor Keycard, (50%), Scientist Keycard, (50%)",Scientist Keycard,Guard Keycard,Facility Manager Keycard,"Zone Manager Keycard, (40%), Facility Manager Keycard, (40%), CI Access Device, (20%)",False
-Facility Manager Keycard,Zone Manager Keycard,Captain Keycard,CI Access Device,O5 Keycard,"Destroyed (25%), O5 Keycard, (75%)",False
-CI Access Device,Guard Keycard,Operative Keycard,Captain Keycard,O5 Keycard,"Destroyed (25%), O5 Keycard, (75%)",False
-O5 Keycard,Guard Keycard,"Facility Manager Keycard, (50%), Captain Keycard, (50%)",O5 Keycard,"Destroyed (50%), O5 Keycard, (50%)","Destroyed (75%), O5 Keycard, (25%)",False
-COM-15,"Destroyed (50%), 9x19mm (50%) (15 rounds)","Randomized Attachments (50%), 9x19mm (50%) (15 rounds)",Randomized Attachments,COM-18,".44 Revolver, (40%), FSP-9, (35%), COM-45, (25%)",False
-COM-18,"9x19mm (50%) (15 rounds), 9x19mm (50%) (30 rounds)",COM-15,Randomized Attachments,FSP-9,"Crossvec, (55%), .44 Revolver, (45%)",False
-Crossvec,"Destroyed (50%), 9x19mm (50%) (60 rounds)",FSP-9,Randomized Attachments,"MTF-E11-SR, (60%), AK, (40%)","MTF-E11-SR, (70%), Shotgun, (30%)",False
-FR-MG-0,"MTF-E11-SR, (50%), 5.56x45mm (50%) (150 rounds)",MTF-E11-SR,Randomized Attachments,Logicer,"Destroyed (90%), Micro H.I.D., (10%)",False
-FSP-9,"Destroyed (50%), 9x19mm (50%) (45 rounds)",COM-18,Randomized Attachments,Crossvec,"Crossvec, (70%), MTF-E11-SR, (30%)",False
-MTF-E11-SR,"COM-15, (50%), 5.56x45mm (50%) (80 rounds)",Crossvec,Randomized Attachments,AK,"AK, (30%), Crossvec, (30%), FR-MG-0, (25%), Shotgun, (15%)",False
-AK,"COM-15, (50%), 7.62x39mm (50%) (90 rounds)","A7, (50%), Crossvec, (50%)",Randomized Attachments,MTF-E11-SR,"Crossvec, (30%), MTF-E11-SR, (30%), Logicer, (20%), Shotgun, (20%)",False
-Logicer,"AK, (50%), 7.62x39mm (50%) (120 rounds)",FR-MG-0,Randomized Attachments,Shotgun,"Destroyed (90%), Micro H.I.D., (10%)",False
-.44 Revolver,"Destroyed (50%), .44 Mag (50%) (12 rounds)","COM-18, (80%), High-Explosive Grenade, (20%)",Randomized Attachments,Crossvec,"CI Access Device, (50%), High-Explosive Grenade, (50%) (x2)",False
-Shotgun,"AK, (50%), 12/70 Buckshot (50%) (25 rounds)",AK,Randomized Attachments,Logicer,"AK, (40%), Crossvec, (40%), Logicer, (20%)",False
-High-Explosive Grenade,Destroyed,Flashbang Grenade,Flashbang Grenade,High-Explosive Grenade,"Destroyed (50%), High-Explosive Grenade, (25%), SCP-018, (25%)",False
-Flashbang Grenade,Destroyed,Flashlight,High-Explosive Grenade,High-Explosive Grenade,"Destroyed (75%), SCP-207, (25%)",False
-3-X Particle  Disruptor,Flashlight,MTF-E11-SR,Jailbird,"3-X Particle  Disruptor, (Refueled)","3-X Particle  Disruptor, (Refueled)",False
-A7,"COM-15, (50%), 7.62x39mm (50%) (90 rounds)",COM-18,A7,AK,"Multiple Items, Flashbang Grenade, .44 Revolver",False
-COM-45,"Destroyed (50%), 9x19mm (50%) (15 rounds)","9x19mm (50%) (15 rounds), COM-15, (50%)",COM-45,Crossvec,.44 Revolver,False
-Jailbird,Flashlight,"Jailbird, (Damaged)",3-X Particle  Disruptor,"Jailbird, (Refueled)",Micro H.I.D.,False
-Micro H.I.D.,Destroyed,"Micro H.I.D., (Damaged)","3-X Particle  Disruptor, (50%), Jailbird, (50%)","Micro H.I.D., (Refueled)","Micro H.I.D., (Refueled)",False
-9x19mm,5.56x45mm  (10 rounds),5.56x45mm  (10 rounds),".44 Mag  (4 rounds), 9x19mm  (1 round)",5.56x45mm  (10 rounds),5.56x45mm  (10 rounds),False
-5.56x45mm,"9x19mm  (21 rounds), 5.56x45mm  (1 round)","9x19mm  (21 rounds), 5.56x45mm  (1 round)",7.62x39mm  (15 rounds),"9x19mm  (21 rounds), 5.56x45mm  (1 round)","9x19mm  (21 rounds), 5.56x45mm  (1 round)",False
-7.62x39mm,".44 Mag  (6 rounds), 7.62x39mm  (1 round)",".44 Mag  (6 rounds), 7.62x39mm  (1 round)",5.56x45mm  (15 rounds),12/70 Buckshot  (9 rounds),12/70 Buckshot  (9 rounds),False
-12/70 Buckshot,7.62x39mm  (25 rounds),7.62x39mm  (25 rounds),"9x19mm  (35 rounds), 12/70 Buckshot  (1 round)",".44 Mag  (10 rounds), 12/70 Buckshot  (1 round)",".44 Mag  (10 rounds), 12/70 Buckshot  (1 round)",False
-.44 Mag,12/70 Buckshot  (21 rounds),12/70 Buckshot  (21 rounds),"9x19mm  (49 rounds), .44 Mag  (1 round)",7.62x39mm  (35 rounds),7.62x39mm  (35 rounds),False
-9x19mm,5.56x45mm  (20 rounds),5.56x45mm  (20 rounds),".44 Mag  (8 rounds), 9x19mm  (2 rounds)",5.56x45mm  (20 rounds),5.56x45mm  (20 rounds),False
-5.56x45mm,9x19mm  (45 rounds),9x19mm  (45 rounds),7.62x39mm  (30 rounds),9x19mm  (45 rounds),9x19mm  (45 rounds),False
-7.62x39mm,".44 Mag  (12 rounds), 7.62x39mm  (2 rounds)",".44 Mag  (12 rounds), 7.62x39mm  (2 rounds)",5.56x45mm  (30 rounds),12/70 Buckshot  (18 rounds),12/70 Buckshot  (18 rounds),False
-12/70 Buckshot,7.62x39mm  (50 rounds),7.62x39mm  (50 rounds),9x19mm  (75 rounds),".44 Mag  (20 rounds), 12/70 Buckshot  (2 rounds)",".44 Mag  (20 rounds), 12/70 Buckshot  (2 rounds)",False
-.44 Mag,12/70 Buckshot  (42 rounds),12/70 Buckshot  (42 rounds),9x19mm  (105 rounds),7.62x39mm  (70 rounds),7.62x39mm  (70 rounds),False
-Adrenaline,"Destroyed (50%), Painkillers, (50%)","First Aid Kit, (50%), Painkillers, (50%)",Painkillers,SCP-500,"Painkillers, (66%), SCP-500, (33%)",False
-First Aid Kit,Destroyed,Painkillers,First Aid Kit,Adrenaline,"Destroyed (33%), First Aid Kit, (33%), SCP-500, (33%)",False
-Painkillers,Destroyed,"Destroyed (50%), Painkillers, (50%)",Painkillers,First Aid Kit,"Adrenaline, (50%), First Aid Kit, (50%)",False
-SCP-207?,Painkillers,Adrenaline,SCP-207,SCP-1853,Destroyed,False
-SCP-018,Flashbang Grenade,Flashbang Grenade,SCP-018,High-Explosive Grenade,Coin,False
-SCP-127,SCP-127,COM-18,FSP-9,Crossvec,MTF-E11-SR,False
-SCP-207,Painkillers,Adrenaline,SCP-207?,SCP-1853,Destroyed,False
-SCP-244-A,Destroyed,Coin,SCP-244-B,SCP-244-A,SCP-244-A,False
-SCP-244-B,Destroyed,Coin,SCP-244-A,SCP-244-B,SCP-244-B,False
-SCP-268,Destroyed,SCP-268,SCP-268,SCP-268,SCP-268,False
-SCP-500,"First Aid Kit, (50%), Painkillers, (50%)",Adrenaline,SCP-500,"Destroyed (50%), SCP-500, (50%)",Destroyed,False
-SCP-1344,Flashbang Grenade,Radio,"Adrenaline, (50%), Flashbang Grenade, (50%)",SCP-1853,"Adrenaline, (50%) (x2), SCP-2176, (50%)",False
-SCP-1509,Destroyed,SCP-1576,SCP-1509,SCP-1509,"Destroyed (90%), Jailbird, (10%)",False
-SCP-1576,Radio,SCP-2176,SCP-1576,Destroyed,Destroyed,False
-SCP-1853,Painkillers,Adrenaline,SCP-1853,SCP-207,"Destroyed (50%), SCP-500, (50%)",False
-SCP-2176,Activates,Flashbang Grenade,"Coin, (x12)",COM-18,"Flashlight, (80%), MTF-E11-SR, (20%)",False
-Light Armor,"Destroyed (50%), Radio, (50%)",Flashlight,Light Armor,Combat Armor,"Combat Armor, (50%), Heavy Armor, (50%)",False
-Combat Armor,"Light Armor, (50%), Flashlight, (50%)",Light Armor,Combat Armor,Heavy Armor,Heavy Armor,False
-Heavy Armor,"Light Armor, (50%), Combat Armor, (50%)",Combat Armor,Heavy Armor,Coin,Coin,False
-Coin,Destroyed,Coin,Coin,Coin,Coin,False
-Flashlight,Destroyed,"Destroyed (50%), Flashlight, (50%)",Flashlight,Radio,"Flashbang Grenade, (90%), SCP-2176, (10%)",False
-Radio,Destroyed,Destroyed,"Radio, (Recharged)","Radio, (Recharged)","Flashlight, (75%), SCP-1576, (25%)",False
-Containment Engineer Keycard,"Scientist Keycard, (50%), Research Supervisor Keycard, (50%)",Research Supervisor Keycard,Facility Manager Keycard,"Captain Keycard, (50%), O5 Keycard, (50%)","Destroyed (33%), O5 Keycard, (66%)",True
-Private Keycard,"Scientist Keycard, (50%), Research Supervisor Keycard, (50%)",Research Supervisor Keycard,Containment Engineer Keycard,Operative Keycard,"Operative Keycard, (50%), Captain Keycard, (50%)",True
-Lantern,Destroyed,"Destroyed (50%), Lantern, (50%)",Flashlight,Radio,"Flashbang Grenade, (90%), SCP-2176, (10%)",True
+Input,Rough,Coarse,1:1,Fine,Very Fine,admin_only,category
+Janitor Keycard,Destroyed,Destroyed,Zone Manager Keycard,Scientist Keycard,"Scientist Keycard, (50%), Research Supervisor Keycard, (50%)",False,Keycards
+Scientist Keycard,"Destroyed (50%), Janitor Keycard, (50%)",Janitor Keycard,Zone Manager Keycard,Research Supervisor Keycard,"Scientist Keycard, (33%), Research Supervisor Keycard, (33%), Facility Manager Keycard, (33%)",False,Keycards
+Research Supervisor Keycard,"Janitor Keycard, (50%), Scientist Keycard, (50%)",Scientist Keycard,Guard Keycard,Facility Manager Keycard,"Research Supervisor Keycard, (50%), Facility Manager Keycard, (50%)",False,Keycards
+Guard Keycard,"Janitor Keycard, (50%), Scientist Keycard, (50%)",Scientist Keycard,Research Supervisor Keycard,Operative Keycard,"Guard Keycard, (33%), Operative Keycard, (33%), Captain Keycard, (33%)",False,Keycards
+Operative Keycard,"Guard Keycard, (50%), Destroyed (50%)",Guard Keycard,Facility Manager Keycard,Captain Keycard,"Operative Keycard, (33%), Captain Keycard, (33%), O5 Keycard, (33%)",False,Keycards
+Captain Keycard,Operative Keycard,Operative Keycard,CI Access Device,O5 Keycard,"Destroyed (25%), O5 Keycard, (75%)",False,Keycards
+Zone Manager Keycard,"Janitor Keycard, (50%), Scientist Keycard, (50%)",Scientist Keycard,Guard Keycard,Facility Manager Keycard,"Zone Manager Keycard, (40%), Facility Manager Keycard, (40%), CI Access Device, (20%)",False,Keycards
+Facility Manager Keycard,Zone Manager Keycard,Captain Keycard,CI Access Device,O5 Keycard,"Destroyed (25%), O5 Keycard, (75%)",False,Keycards
+CI Access Device,Guard Keycard,Operative Keycard,Captain Keycard,O5 Keycard,"Destroyed (25%), O5 Keycard, (75%)",False,Keycards
+O5 Keycard,Guard Keycard,"Facility Manager Keycard, (50%), Captain Keycard, (50%)",O5 Keycard,"Destroyed (50%), O5 Keycard, (50%)","Destroyed (75%), O5 Keycard, (25%)",False,Keycards
+COM-15,"Destroyed (50%), 9x19mm (50%) (15 rounds)","Randomized Attachments (50%), 9x19mm (50%) (15 rounds)",Randomized Attachments,COM-18,".44 Revolver, (40%), FSP-9, (35%), COM-45, (25%)",False,Standard Weaponry
+COM-18,"9x19mm (50%) (15 rounds), 9x19mm (50%) (30 rounds)",COM-15,Randomized Attachments,FSP-9,"Crossvec, (55%), .44 Revolver, (45%)",False,Standard Weaponry
+Crossvec,"Destroyed (50%), 9x19mm (50%) (60 rounds)",FSP-9,Randomized Attachments,"MTF-E11-SR, (60%), AK, (40%)","MTF-E11-SR, (70%), Shotgun, (30%)",False,Standard Weaponry
+FR-MG-0,"MTF-E11-SR, (50%), 5.56x45mm (50%) (150 rounds)",MTF-E11-SR,Randomized Attachments,Logicer,"Destroyed (90%), Micro H.I.D., (10%)",False,Standard Weaponry
+FSP-9,"Destroyed (50%), 9x19mm (50%) (45 rounds)",COM-18,Randomized Attachments,Crossvec,"Crossvec, (70%), MTF-E11-SR, (30%)",False,Standard Weaponry
+MTF-E11-SR,"COM-15, (50%), 5.56x45mm (50%) (80 rounds)",Crossvec,Randomized Attachments,AK,"AK, (30%), Crossvec, (30%), FR-MG-0, (25%), Shotgun, (15%)",False,Standard Weaponry
+AK,"COM-15, (50%), 7.62x39mm (50%) (90 rounds)","A7, (50%), Crossvec, (50%)",Randomized Attachments,MTF-E11-SR,"Crossvec, (30%), MTF-E11-SR, (30%), Logicer, (20%), Shotgun, (20%)",False,Standard Weaponry
+Logicer,"AK, (50%), 7.62x39mm (50%) (120 rounds)",FR-MG-0,Randomized Attachments,Shotgun,"Destroyed (90%), Micro H.I.D., (10%)",False,Standard Weaponry
+.44 Revolver,"Destroyed (50%), .44 Mag (50%) (12 rounds)","COM-18, (80%), High-Explosive Grenade, (20%)",Randomized Attachments,Crossvec,"CI Access Device, (50%), High-Explosive Grenade, (50%) (x2)",False,Standard Weaponry
+Shotgun,"AK, (50%), 12/70 Buckshot (50%) (25 rounds)",AK,Randomized Attachments,Logicer,"AK, (40%), Crossvec, (40%), Logicer, (20%)",False,Standard Weaponry
+High-Explosive Grenade,Destroyed,Flashbang Grenade,Flashbang Grenade,High-Explosive Grenade,"Destroyed (50%), High-Explosive Grenade, (25%), SCP-018, (25%)",False,Standard Weaponry
+Flashbang Grenade,Destroyed,Flashlight,High-Explosive Grenade,High-Explosive Grenade,"Destroyed (75%), SCP-207, (25%)",False,Standard Weaponry
+3-X Particle  Disruptor,Flashlight,MTF-E11-SR,Jailbird,"3-X Particle  Disruptor, (Refueled)","3-X Particle  Disruptor, (Refueled)",False,Special Weaponry
+A7,"COM-15, (50%), 7.62x39mm (50%) (90 rounds)",COM-18,A7,AK,"Multiple Items, Flashbang Grenade, .44 Revolver",False,Special Weaponry
+COM-45,"Destroyed (50%), 9x19mm (50%) (15 rounds)","9x19mm (50%) (15 rounds), COM-15, (50%)",COM-45,Crossvec,.44 Revolver,False,Special Weaponry
+Jailbird,Flashlight,"Jailbird, (Damaged)",3-X Particle  Disruptor,"Jailbird, (Refueled)",Micro H.I.D.,False,Special Weaponry
+Micro H.I.D.,Destroyed,"Micro H.I.D., (Damaged)","3-X Particle  Disruptor, (50%), Jailbird, (50%)","Micro H.I.D., (Refueled)","Micro H.I.D., (Refueled)",False,Special Weaponry
+9x19mm,5.56x45mm  (10 rounds),5.56x45mm  (10 rounds),".44 Mag  (4 rounds), 9x19mm  (1 round)",5.56x45mm  (10 rounds),5.56x45mm  (10 rounds),False,Ammo
+5.56x45mm,"9x19mm  (21 rounds), 5.56x45mm  (1 round)","9x19mm  (21 rounds), 5.56x45mm  (1 round)",7.62x39mm  (15 rounds),"9x19mm  (21 rounds), 5.56x45mm  (1 round)","9x19mm  (21 rounds), 5.56x45mm  (1 round)",False,Ammo
+7.62x39mm,".44 Mag  (6 rounds), 7.62x39mm  (1 round)",".44 Mag  (6 rounds), 7.62x39mm  (1 round)",5.56x45mm  (15 rounds),12/70 Buckshot  (9 rounds),12/70 Buckshot  (9 rounds),False,Ammo
+12/70 Buckshot,7.62x39mm  (25 rounds),7.62x39mm  (25 rounds),"9x19mm  (35 rounds), 12/70 Buckshot  (1 round)",".44 Mag  (10 rounds), 12/70 Buckshot  (1 round)",".44 Mag  (10 rounds), 12/70 Buckshot  (1 round)",False,Ammo
+.44 Mag,12/70 Buckshot  (21 rounds),12/70 Buckshot  (21 rounds),"9x19mm  (49 rounds), .44 Mag  (1 round)",7.62x39mm  (35 rounds),7.62x39mm  (35 rounds),False,Ammo
+9x19mm,5.56x45mm  (20 rounds),5.56x45mm  (20 rounds),".44 Mag  (8 rounds), 9x19mm  (2 rounds)",5.56x45mm  (20 rounds),5.56x45mm  (20 rounds),False,Ammo
+5.56x45mm,9x19mm  (45 rounds),9x19mm  (45 rounds),7.62x39mm  (30 rounds),9x19mm  (45 rounds),9x19mm  (45 rounds),False,Ammo
+7.62x39mm,".44 Mag  (12 rounds), 7.62x39mm  (2 rounds)",".44 Mag  (12 rounds), 7.62x39mm  (2 rounds)",5.56x45mm  (30 rounds),12/70 Buckshot  (18 rounds),12/70 Buckshot  (18 rounds),False,Ammo
+12/70 Buckshot,7.62x39mm  (50 rounds),7.62x39mm  (50 rounds),9x19mm  (75 rounds),".44 Mag  (20 rounds), 12/70 Buckshot  (2 rounds)",".44 Mag  (20 rounds), 12/70 Buckshot  (2 rounds)",False,Ammo
+.44 Mag,12/70 Buckshot  (42 rounds),12/70 Buckshot  (42 rounds),9x19mm  (105 rounds),7.62x39mm  (70 rounds),7.62x39mm  (70 rounds),False,Ammo
+Adrenaline,"Destroyed (50%), Painkillers, (50%)","First Aid Kit, (50%), Painkillers, (50%)",Painkillers,SCP-500,"Painkillers, (66%), SCP-500, (33%)",False,Treatment Items
+First Aid Kit,Destroyed,Painkillers,First Aid Kit,Adrenaline,"Destroyed (33%), First Aid Kit, (33%), SCP-500, (33%)",False,Treatment Items
+Painkillers,Destroyed,"Destroyed (50%), Painkillers, (50%)",Painkillers,First Aid Kit,"Adrenaline, (50%), First Aid Kit, (50%)",False,Treatment Items
+SCP-207?,Painkillers,Adrenaline,SCP-207,SCP-1853,Destroyed,False,SCP Items
+SCP-018,Flashbang Grenade,Flashbang Grenade,SCP-018,High-Explosive Grenade,Coin,False,SCP Items
+SCP-127,SCP-127,COM-18,FSP-9,Crossvec,MTF-E11-SR,False,SCP Items
+SCP-207,Painkillers,Adrenaline,SCP-207?,SCP-1853,Destroyed,False,SCP Items
+SCP-244-A,Destroyed,Coin,SCP-244-B,SCP-244-A,SCP-244-A,False,SCP Items
+SCP-244-B,Destroyed,Coin,SCP-244-A,SCP-244-B,SCP-244-B,False,SCP Items
+SCP-268,Destroyed,SCP-268,SCP-268,SCP-268,SCP-268,False,SCP Items
+SCP-500,"First Aid Kit, (50%), Painkillers, (50%)",Adrenaline,SCP-500,"Destroyed (50%), SCP-500, (50%)",Destroyed,False,SCP Items
+SCP-1344,Flashbang Grenade,Radio,"Adrenaline, (50%), Flashbang Grenade, (50%)",SCP-1853,"Adrenaline, (50%) (x2), SCP-2176, (50%)",False,SCP Items
+SCP-1509,Destroyed,SCP-1576,SCP-1509,SCP-1509,"Destroyed (90%), Jailbird, (10%)",False,SCP Items
+SCP-1576,Radio,SCP-2176,SCP-1576,Destroyed,Destroyed,False,SCP Items
+SCP-1853,Painkillers,Adrenaline,SCP-1853,SCP-207,"Destroyed (50%), SCP-500, (50%)",False,SCP Items
+SCP-2176,Activates,Flashbang Grenade,"Coin, (x12)",COM-18,"Flashlight, (80%), MTF-E11-SR, (20%)",False,SCP Items
+Light Armor,"Destroyed (50%), Radio, (50%)",Flashlight,Light Armor,Combat Armor,"Combat Armor, (50%), Heavy Armor, (50%)",False,Miscellaneous
+Combat Armor,"Light Armor, (50%), Flashlight, (50%)",Light Armor,Combat Armor,Heavy Armor,Heavy Armor,False,Miscellaneous
+Heavy Armor,"Light Armor, (50%), Combat Armor, (50%)",Combat Armor,Heavy Armor,Coin,Coin,False,Miscellaneous
+Coin,Destroyed,Coin,Coin,Coin,Coin,False,Miscellaneous
+Flashlight,Destroyed,"Destroyed (50%), Flashlight, (50%)",Flashlight,Radio,"Flashbang Grenade, (90%), SCP-2176, (10%)",False,Miscellaneous
+Radio,Destroyed,Destroyed,"Radio, (Recharged)","Radio, (Recharged)","Flashlight, (75%), SCP-1576, (25%)",False,Miscellaneous
+Containment Engineer Keycard,"Scientist Keycard, (50%), Research Supervisor Keycard, (50%)",Research Supervisor Keycard,Facility Manager Keycard,"Captain Keycard, (50%), O5 Keycard, (50%)","Destroyed (33%), O5 Keycard, (66%)",True,Remote Admin Only Items
+Private Keycard,"Scientist Keycard, (50%), Research Supervisor Keycard, (50%)",Research Supervisor Keycard,Containment Engineer Keycard,Operative Keycard,"Operative Keycard, (50%), Captain Keycard, (50%)",True,Remote Admin Only Items
+Lantern,Destroyed,"Destroyed (50%), Lantern, (50%)",Flashlight,Radio,"Flashbang Grenade, (90%), SCP-2176, (10%)",True,Remote Admin Only Items

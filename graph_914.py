@@ -15,6 +15,7 @@ _ap.add_argument("target")
 _ap.add_argument("--admin", action="store_true")
 _ap.add_argument("--items", type=float, default=None)
 _ap.add_argument("--steps", type=float, default=None)
+_ap.add_argument("--no-show", action="store_true")
 _args = _ap.parse_args()
 _raw_target = _args.target
 _include_admin = _args.admin
@@ -871,7 +872,7 @@ for t in nx.draw_networkx_labels(G, pos, labels=node_labels, font_size=7, ax=ax)
     t.set_zorder(3)
 
 legend = [mpatches.Patch(color=c, label=s) for s, c in setting_colors.items()]
-ax.legend(handles=legend, loc="upper right")
+ax.legend(handles=legend, loc="upper left")
 ax.set_title(f"Paths to: {target}", y=0.98)
 ax.axis("off")
 plt.tight_layout()
@@ -887,8 +888,10 @@ if _arg_steps is not None:
     _fname += f"steps_{int(_arg_steps)}_"
 if _arg_items is None and _arg_steps is None:
     _fname += "full_"
-_fname += re.sub(r'[^a-z0-9]+', '_', target.lower()).strip('_') + ".png"
+_fname += re.sub(r'[^a-z0-9]+', '_', target.lower()).strip('_')
 _fpath = os.path.join(_graphs_dir, _fname)
-plt.savefig(_fpath, dpi=150)
-print(f"Saved {_fpath}")
-plt.show()
+plt.savefig(_fpath + ".svg")
+plt.savefig(_fpath + ".png", dpi=150)
+print(f"Saved {_fpath}.svg + .png")
+if not _args.no_show:
+    plt.show()
