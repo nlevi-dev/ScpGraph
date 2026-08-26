@@ -1,0 +1,4 @@
+[submodule "index"]
+	path = index
+	url = https://github.com/nlevi-dev/ScpGraph.git
+	branch = index
