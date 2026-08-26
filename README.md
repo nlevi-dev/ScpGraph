@@ -99,6 +99,17 @@ Nodes introduced by sibling re-add that weren't in the original pruned graph get
 **Step 7 — Final cleanup.**
 Self-loops are removed. Nodes that no longer have a path to the target are dropped. **Destroyed** and **Lost** are kept only if something points to them.
 
+### Layout optimisation
+
+After all pruning, nodes are arranged in horizontal layers (target at layer 0, deepest ancestors furthest down). **Destroyed** and **Lost** are placed at `max(predecessor_layer) + 1` rather than always at the bottom, so they sit close to the nodes that feed them.
+
+Node order within each layer is then optimised to minimise a weighted crossing cost:
+
+- **Same-layer edges** (hop = 0): cost = number of nodes physically between the two endpoints in that layer.
+- **k-hop edges** (k ≥ 1): for each pair of edges where one has hop k and the other has hop ≤ k, add 1/k if they cross geometrically (checked via linear interpolation over the shared layer range, extended ±0.5 layers to catch crossings at shared endpoints).
+
+The optimiser precomputes all candidate crossing pairs once (`_build_edge_pairs`), then evaluates cost cheaply via `_cost_from_pos_x`. Search strategy: sliding window of 2 adjacent layers, stride 1. For layers with ≤ 5 nodes, all permutation pairs are tried exhaustively (max 5! × 5! = 14 400). For larger layers, pairwise swaps are used. Multiple random restarts are run; the globally best result is kept.
+
 ### Reach probability
 
 After pruning, a second fixed-point iteration computes `reach[n]` — the probability that starting from item `n` and following the graph's edges, you eventually produce the target. The formula accounts for grouped co-products, multi-output settings (e.g. `(x12)` coins), and independent settings:
@@ -154,6 +165,8 @@ reach% | avg_items items | avg_steps steps
 
 Example: `Scientist Keycard\n45.2% | 2.2 items | 3.8 steps`
 
+Labels are rendered with a semi-transparent white rounded background box for readability.
+
 ### Edge colours (by setting)
 
 | Colour | Setting |
@@ -164,7 +177,7 @@ Example: `Scientist Keycard\n45.2% | 2.2 items | 3.8 steps`
 | Green | Fine |
 | Blue | Very Fine |
 
-Edges are drawn as gradient lines (dark at source, bright at destination) with arrowheads. Bidirectional edges between the same pair of nodes are offset. Edges that pass through intermediate node positions are automatically bent with a quadratic Bézier curve.
+Edges are drawn as gradient lines (dark at source, bright at destination) with arrowheads. Bidirectional edges between the same pair of nodes are offset and always drawn straight. Unidirectional edges whose straight line passes within the radius of an intermediate node are automatically bent with a quadratic Bézier curve. The bend magnitude is found via binary search (starting at `EDGE_BEND`, halving the interval each step, up to 8 iterations) independently for both perpendicular directions; the direction yielding the smaller collision-free magnitude wins. If no candidate clears all nodes within 8 steps, the default `EDGE_BEND` magnitude is used.
 
 ---
 

@@ -745,48 +745,64 @@ def draw_gradient_edge(ax, p1, p2, color, ctrl=None, n_segments=30):
     ax.annotate("", xy=p2c, xytext=(xs[-2], ys[-2]),
                 arrowprops=dict(arrowstyle="->", color=tuple(base * 0.8), lw=1.5), zorder=1)
 
-def needs_bend(p1, p2, all_pos, fig, ax):
-    """Return True if any other node's circle (radius in data coords) intersects the line p1->p2."""
-    direction = p2 - p1
-    length = np.linalg.norm(direction)
-    if length == 0:
-        return False
-    unit = direction / length
+def _get_rx_ry(fig, ax):
     r_pts = np.sqrt(800 / np.pi)
     r_inch = r_pts / 72
     ax_w_inch = ax.get_position().width * fig.get_figwidth()
     ax_h_inch = ax.get_position().height * fig.get_figheight()
     x0, x1 = ax.get_xlim()
     y0, y1 = ax.get_ylim()
-    rx = r_inch / ax_w_inch * (x1 - x0)
-    ry = r_inch / ax_h_inch * (y1 - y0)
+    return r_inch / ax_w_inch * (x1 - x0), r_inch / ax_h_inch * (y1 - y0)
+
+def _bezier_collides(p1, p2, ctrl, all_pos, rx, ry, n_samples=30):
+    """Return True if the quadratic bezier (p1, ctrl, p2) passes through any node ellipse."""
+    ts = np.linspace(0, 1, n_samples + 1)
+    pts = np.outer((1-ts)**2, p1) + np.outer(2*(1-ts)*ts, ctrl) + np.outer(ts**2, p2)
     for q in all_pos:
         q = np.array(q)
         if np.allclose(q, p1) or np.allclose(q, p2):
             continue
-        t = np.dot(q - p1, unit)
-        if t <= 0 or t >= length:
-            continue
-        closest = p1 + t * unit
-        diff = q - closest
-        # Elliptical node: check if diff is within the node ellipse
-        if (diff[0] / rx) ** 2 + (diff[1] / ry) ** 2 < 1.0:
+        diffs = pts - q
+        if np.any((diffs[:, 0] / rx) ** 2 + (diffs[:, 1] / ry) ** 2 < 1.0):
             return True
     return False
 
-def bend_ctrl(p1, p2, all_pos):
-    """Compute a quadratic bezier control point that bends away from intermediate nodes."""
+def find_bend_ctrl(p1, p2, all_pos, fig, ax, n_iter=8):
+    """Binary-search the smallest bend magnitude (for both ±perp) that avoids node collisions.
+    Sequence (skipping index 0 = EDGE_BEND*2): EDGE_BEND, EDGE_BEND/2, EDGE_BEND*3/2, ...
+    Returns the ctrl point with the smaller winning magnitude, or None if straight is clear."""
+    rx, ry = _get_rx_ry(fig, ax)
+    # Check straight line first (ctrl = midpoint, i.e. bend=0)
     mid = (p1 + p2) / 2
+    if not _bezier_collides(p1, p2, mid, all_pos, rx, ry):
+        return None
     direction = p2 - p1
-    # Perpendicular (bend to the right of travel direction)
+    length = np.linalg.norm(direction)
     perp = np.array([-direction[1], direction[0]])
     norm = np.linalg.norm(perp)
     if norm == 0:
         return mid
     perp = perp / norm
-    # Bend amount: proportional to edge length
-    bend = np.linalg.norm(direction) * EDGE_BEND
-    return mid + perp * bend
+    base = length * EDGE_BEND * 2  # index-0 value (skipped)
+    # Binary search state per direction: lo=0, hi=base, next candidate = base/2 (index 1)
+    # Sequence: index k>=1 -> lo + (hi-lo)/2 iteratively
+    best = {}  # sign -> winning bend magnitude
+    for sign in (+1, -1):
+        lo, hi = 0.0, base
+        for k in range(n_iter):
+            candidate = (lo + hi) / 2
+            ctrl = mid + sign * perp * candidate
+            if not _bezier_collides(p1, p2, ctrl, all_pos, rx, ry):
+                best[sign] = candidate
+                hi = candidate  # try smaller
+                break
+            else:
+                lo = candidate  # need larger
+    if not best:
+        # Nothing worked; fall back to EDGE_BEND on +perp
+        return mid + perp * (length * EDGE_BEND)
+    best_sign = min(best, key=lambda s: best[s])
+    return mid + best_sign * perp * best[best_sign]
 
 edge_list = list(G.edges(data=True))
 pair_count = defaultdict(int)
@@ -830,7 +846,7 @@ def redraw_edges(event=None):
                 perp = perp / norm * 0.2 * (idx - (n-1)/2)
                 p1, p2 = p1 + perp, p2 + perp
         bidir = pair_count[canon] > 1
-        ctrl = bend_ctrl(p1, p2, all_pos_list) if (not bidir and needs_bend(p1, p2, all_pos_list, fig, ax)) else None
+        ctrl = find_bend_ctrl(p1, p2, all_pos_list, fig, ax) if not bidir else None
         draw_gradient_edge(ax, p1, p2, color, ctrl=ctrl)
     ax.plot = _orig_plot
     ax.annotate = _orig_annotate
@@ -851,6 +867,7 @@ def _fmt_node(n):
     return f"{n}\n{p*100:.1f}% | {ai_str} items | {ae_str} steps"
 node_labels = {n: _fmt_node(n) for n in G.nodes()}
 for t in nx.draw_networkx_labels(G, pos, labels=node_labels, font_size=7, ax=ax).values():
+    t.set_bbox(dict(boxstyle="round,pad=0.2", facecolor="white", alpha=0.6, edgecolor="none"))
     t.set_zorder(3)
 
 legend = [mpatches.Patch(color=c, label=s) for s, c in setting_colors.items()]
