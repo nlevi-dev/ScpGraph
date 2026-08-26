@@ -1,0 +1,11 @@
+This software includes contributions from Levente Zsolt Nagy.
+Licensed under the Apache License, Version 2.0.
+
+This software includes code adapted from video-subtitle-remover
+by YaoFANGUK (https://github.com/YaoFANGUK/video-subtitle-remover),
+licensed under the Apache License, Version 2.0.
+The STTN model weights (sttn/infer_model.pth) and the following files
+are derived from that project:
+  sttn/auto_sttn.py
+  sttn/spectral_norm.py
+  sttn/sttn_utils.py
