@@ -44,6 +44,8 @@ desc = ("<p>This site shows the most efficient crafting paths through <b>SCP-914
         "get one target (1 &divide; reach).<br>"
         "&bull; <b>Steps</b> &mdash; the expected total number of 914 uses until the "
         "target appears, including failed attempts and all items consumed along the way.</p>")
+github_note = ("<p style=\"font-size:.9em;color:#555\">Interested in the technical groundwork? "
+               "Check out the source on <a href=\"https://github.com/nlevi-dev/ScpGraph\" target=\"_blank\">GitHub</a>.</p>")
 html = ("<!DOCTYPE html><html lang=\"en\"><head><meta charset=\"UTF-8\">"
         "<title>SCP-914 Crafting Graphs</title>"
         "<style>body{font-family:sans-serif;max-width:700px;margin:2rem auto}"
@@ -52,7 +54,7 @@ html = ("<!DOCTYPE html><html lang=\"en\"><head><meta charset=\"UTF-8\">"
         "a{text-decoration:none;color:#2980b9}a:hover{text-decoration:underline}"
         "p{color:#333;line-height:1.6}</style></head><body>"
         "<h1>SCP-914 Crafting Graphs</h1>"
-        + desc +
+        + github_note + desc +
         "<table>" + "".join(rows_html) + "</table></body></html>")
 
 out = "index/index.html"

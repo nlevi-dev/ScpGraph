@@ -2,6 +2,21 @@
 
 Visualises the optimal crafting paths through **SCP-914** (the item-upgrading machine in *SCP: Secret Laboratory*) to reach any target item. Given a target, it builds a directed graph showing which items to feed into 914, on which setting, and annotates every node with the probability of eventually producing the target, the expected number of input items needed, and the expected number of 914 uses.
 
+The interactive web version is hosted at **https://nlevi-dev.github.io/ScpGraph**.
+
+---
+
+## Background
+
+SCP-914 accepts items and transforms them according to one of five settings: Rough, Coarse, 1:1, Fine, and Very Fine. The transformation rules are complex:
+
+- **Multiple settings** — each setting produces a completely different output for the same input, so the choice of setting is a meaningful decision at every step.
+- **Probabilistic outputs** — a single (input, setting) pair can produce several different items, each with its own probability. For example, a Scientist Keycard on Fine might yield a Research Supervisor Keycard 50% of the time and a Facility Manager Keycard 50% of the time.
+- **Multiple output items per transaction** — some (input, setting) pairs produce more than one item at once (e.g. `(x12)` coins, or a revolver *and* a flashbang simultaneously as co-products).
+- **Chained upgrades** — reaching a high-tier item typically requires several sequential 914 uses, each introducing its own probability of failure or detour. The full upgrade space is therefore a **directed graph** where nodes are items and edges are (setting, chance) labelled transitions.
+
+Because the graph can contain cycles, multiple paths to the same target, and branching probabilities at every step, finding the *optimal* route is non-trivial. This project models the full transition space as a `MultiDiGraph`, prunes it to the highest-probability path toward any chosen target, and annotates each node with three statistics: the probability of eventually reaching the target from that item, the expected number of input items consumed, and the expected total number of 914 uses.
+
 ---
 
 ## Pipeline

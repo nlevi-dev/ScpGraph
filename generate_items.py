@@ -25,7 +25,7 @@ for _, r in df.iterrows():
             f"<title>SCP-914: {name}</title>"
             "<style>body{font-family:sans-serif;margin:1rem}a{color:#2980b9}"
             "svg{width:1280px;height:auto}</style></head><body>"
-            f"<p><a href=\"../index.html\">&#8592; Back to index</a></p>"
+            f"<p><a href=\"../index.html\">&#8592; Back to homepage</a></p>"
             f"<h1>{name}</h1><div id=g></div>"
             f"<script>var d='{gz_b64}';"
             "var b=Uint8Array.from(atob(d),c=>c.charCodeAt(0));"
