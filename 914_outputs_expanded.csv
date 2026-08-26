@@ -56,8 +56,7 @@ Flashbang Grenade,False,Destroyed,1.0,,Flashlight,1.0,,High-Explosive Grenade,1.
 Flashbang Grenade,False,,,,,,,,,,,,,SCP-207 (Cola),0.25,
 3-X Particle  Disruptor,False,Flashlight,1.0,,MTF-E11-SR,1.0,,Jailbird,1.0,,3-X Particle  Disruptor,1.0,(Refueled),3-X Particle  Disruptor,1.0,(Refueled)
 A7,False,COM-15,0.5,,COM-18,1.0,,A7,1.0,,AK,1.0,,,,
-A7,False,7.62x39mm,0.5,(90 rounds),,,,,,,,,,Flashbang Grenade,0.5,
-A7,False,,,,,,,,,,,,,.44 Revolver,0.5,
+A7,False,7.62x39mm,0.5,(90 rounds),,,,,,,,,,.44 Revolver,1.0,(+Flashbang Grenade)
 COM-45,False,Destroyed,0.5,,9x19mm,0.5,(15 rounds),COM-45,1.0,,Crossvec,1.0,,.44 Revolver,1.0,
 COM-45,False,9x19mm,0.5,(15 rounds),COM-15,0.5,,,,,,,,,,
 Jailbird,False,Flashlight,1.0,,Jailbird,1.0,(Damaged),3-X Particle  Disruptor,1.0,,Jailbird,1.0,(Refueled),Micro H.I.D.,1.0,

@@ -32,6 +32,7 @@ SETTINGS = ["Rough", "Coarse", "1:1", "Fine", "Very Fine"]
 
 # Build directed graph: edge = (input -> output)
 G = nx.MultiDiGraph()
+_group_counter = 0
 print("Building graph...", flush=True)
 for _, row in df.iterrows():
     src = row["Input"]
@@ -40,12 +41,20 @@ for _, row in df.iterrows():
         chance = row[f"{s} Chance"]
         mod = row[f"{s} Modifier"]
         count = 1
+        coproduct_item = None
         if pd.notna(mod):
             m = re.match(r'\(x(\d+)\)', str(mod))
             if m:
                 count = int(m.group(1))
+            cp = re.match(r'^\(\+(.+)\)$', str(mod))
+            if cp:
+                coproduct_item = cp.group(1)
         if pd.notna(dst) and pd.notna(src):
-            G.add_edge(src, dst, setting=s, chance=chance, count=count)
+            gid = _group_counter
+            _group_counter += 1
+            G.add_edge(src, dst, setting=s, chance=chance, count=count, group=gid, coproduct=False)
+            if coproduct_item:
+                G.add_edge(src, coproduct_item, setting=s, chance=chance, count=1, group=gid, coproduct=True)
 
 G_full = G.copy()  # save full graph before any pruning
 
@@ -103,59 +112,64 @@ while frontier:
 
 # DP score for pruning: best single-path chance to target (max over paths)
 # Iterate to fixed point to handle cycles correctly.
+# For grouped edges (coproducts), score = chance * max(score[dest]) across the group.
+def _group_scores(node, g, sc):
+    """Return {group_id: (chance, best_dest, best_score)} for non-coproduct primary edges."""
+    by_group = defaultdict(list)  # gid -> [(dest, chance, is_coproduct)]
+    for _, v, d in g.out_edges(node, data=True):
+        by_group[d["group"]].append((v, d.get("chance") or 0, d.get("coproduct", False)))
+    result = {}
+    for gid, members in by_group.items():
+        chance = members[0][1]  # all members share the same chance
+        best = max((sc.get(v, 0.0) for v, _, _ in members), default=0.0)
+        primary = next((v for v, _, cp in members if not cp), members[0][0])
+        result[gid] = (chance, primary, chance * best)
+    return result
+
 score = {target: 1.0}
 for _ in range(1000):
     new_score = {target: 1.0}
     for node in G.nodes():
         if node == target:
             continue
-        vals = [(d.get("chance") or 0) * score.get(v, 0.0)
-                for _, v, d in G.out_edges(node, data=True)]
-        new_score[node] = max(vals) if vals else 0.0
+        gs = _group_scores(node, G, score)
+        new_score[node] = max((s for _, _, s in gs.values()), default=0.0)
     if all(abs(new_score.get(n, 0) - score.get(n, 0)) < 1e-12 for n in G.nodes()):
         break
     score = new_score
 
-# Prune edges: for each node keep only the outgoing destination with max path-chance to target
+# Prune edges: for each node keep only the best group (primary dest with max path-chance).
+# Coproduct members of the winning group are always kept alongside their primary.
 edges_to_remove = []
 for node in list(G.nodes()):
     if node == target:
         continue
-    by_dest = defaultdict(list)  # dest -> [(key, chance)]
-    for u, v, k, d in G.out_edges(node, keys=True, data=True):
-        by_dest[v].append((k, d.get("chance") or 0))
-    dest_scores = {dest: max(c for _, c in edges) * score.get(dest, 0.0)
-                   for dest, edges in by_dest.items()}
-    if not dest_scores:
+    gs = _group_scores(node, G, score)
+    if not gs:
         continue
-    max_score = max(dest_scores.values())
-    # Among tied destinations, prefer the one closest to target (lowest dist)
-    tied = [dest for dest, s in dest_scores.items() if s == max_score]
-    best_dest = min(tied, key=lambda d: (dist.get(d, float("inf")), d))
-    for dest, edges in by_dest.items():
-        if dest != best_dest:
-            edges_to_remove.extend((node, dest, k) for k, _ in edges)
-        else:
-            best_c = max(c for _, c in edges)
-            edges_to_remove.extend((node, dest, k) for k, c in edges if c < best_c)
-
+    max_score = max(s for _, _, s in gs.values())
+    tied = [gid for gid, (_, primary, s) in gs.items() if s == max_score]
+    best_gid = min(tied, key=lambda gid: (dist.get(gs[gid][1], float("inf")), gs[gid][1]))
+    for u, v, k, d in G.out_edges(node, keys=True, data=True):
+        if d["group"] != best_gid:
+            edges_to_remove.extend([(node, v, k)])
 G.remove_edges_from(edges_to_remove)
 
-# Tiebreaker: if a node still has edges from multiple settings, keep only the
-# setting with fewest edges; among ties, keep the highest-index setting.
+# Tiebreaker: if a node still has groups from multiple settings, keep only the
+# setting with fewest groups; among ties, keep the highest-index setting.
 edges_to_remove = []
 for node in list(G.nodes()):
     if node == target:
         continue
-    by_setting = defaultdict(list)  # setting -> [(u, v, k)]
+    by_setting = defaultdict(set)  # setting -> set of group ids
     for u, v, k, d in G.out_edges(node, keys=True, data=True):
-        by_setting[d["setting"]].append((u, v, k))
+        by_setting[d["setting"]].add(d["group"])
     if len(by_setting) <= 1:
         continue
     best_setting = min(by_setting, key=lambda s: (len(by_setting[s]), -SETTINGS.index(s)))
-    for s, edges in by_setting.items():
-        if s != best_setting:
-            edges_to_remove.extend(edges)
+    for u, v, k, d in G.out_edges(node, keys=True, data=True):
+        if d["setting"] != best_setting:
+            edges_to_remove.append((u, v, k))
 G.remove_edges_from(edges_to_remove)
 
 rev = G.reverse()
@@ -204,13 +218,16 @@ for _ in range(1000):
     for _n in _full_nodes:
         if _n == target:
             continue
-        _by_s = defaultdict(list)
+        _by_s_g = defaultdict(lambda: defaultdict(list))  # setting -> group -> [(r, cnt)]
         for _, _v, _d in _G_full_sub.out_edges(_n, data=True):
-            _by_s[_d["setting"]].append((_full_reach.get(_v, 0.0), _d.get("chance") or 0, _d.get("count") or 1))
+            _by_s_g[_d["setting"]][_d["group"]].append((_full_reach.get(_v, 0.0), _d.get("chance") or 0, _d.get("count") or 1))
         _new_r[_n] = 1.0 - np.prod([
-            1.0 - sum(c * (1.0 - (1.0 - r) ** cnt) for r, c, cnt in edges)
-            for edges in _by_s.values()
-        ]) if _by_s else 0.0
+            1.0 - sum(
+                members[0][1] * (1.0 - np.prod([(1.0 - r) ** cnt for r, _, cnt in members]))
+                for members in _by_g.values()
+            )
+            for _by_g in _by_s_g.values()
+        ]) if _by_s_g else 0.0
     if max(abs(_new_r[_n] - _full_reach[_n]) for _n in _full_nodes) < 1e-9:
         break
     _full_reach = _new_r
@@ -237,47 +254,37 @@ _new_node_order = sorted(
 )
 _valid_dests = set(_pruned_nodes) | {target, "Destroyed", "Lost"}
 for node in _new_node_order:
-    by_dest = defaultdict(list)
-    for u, v, k, d in G.out_edges(node, keys=True, data=True):
-        by_dest[v].append((k, d.get("chance") or 0))
-    dest_scores = {dest: max(c for _, c in edges) * _full_reach.get(dest, 0.0)
-                   for dest, edges in by_dest.items()
-                   if dest in _valid_dests}
-    if not dest_scores:
+    gs = _group_scores(node, G, _full_reach)
+    gs = {gid: v for gid, v in gs.items() if v[1] in _valid_dests}
+    if not gs:
         continue
-    max_s = max(dest_scores.values())
-    tied = [dest for dest, s in dest_scores.items() if s == max_s]
-    best_dest = min(tied, key=lambda d: (_dist_now.get(d, float("inf")), d))
-    edges_to_remove = []
-    for dest, edges in by_dest.items():
-        if dest != best_dest:
-            edges_to_remove.extend((node, dest, k) for k, _ in edges)
-        else:
-            best_c = max(c for _, c in edges)
-            edges_to_remove.extend((node, dest, k) for k, c in edges if c < best_c)
+    max_s = max(s for _, _, s in gs.values())
+    tied = [gid for gid, (_, primary, s) in gs.items() if s == max_s]
+    best_gid = min(tied, key=lambda gid: (_dist_now.get(gs[gid][1], float("inf")), gs[gid][1]))
+    edges_to_remove = [(u, v, k) for u, v, k, d in G.out_edges(node, keys=True, data=True)
+                       if d["group"] != best_gid]
     G.remove_edges_from(edges_to_remove)
-    # Setting tiebreaker: fewest edges, then highest index
-    by_setting = defaultdict(list)
+    by_setting = defaultdict(set)
     for u, v, k, d in G.out_edges(node, keys=True, data=True):
-        by_setting[d["setting"]].append((u, v, k))
+        by_setting[d["setting"]].add(d["group"])
     if len(by_setting) > 1:
         best_setting = min(by_setting, key=lambda s: (len(by_setting[s]), -SETTINGS.index(s)))
-        G.remove_edges_from([e for s, edges in by_setting.items()
-                              if s != best_setting for e in edges])
+        G.remove_edges_from([(u, v, k) for u, v, k, d in G.out_edges(node, keys=True, data=True)
+                              if d["setting"] != best_setting])
     _valid_dests.add(node)
 
 # Also apply same tiebreaker to pruned nodes
 for node in _pruned_nodes:
     if node == target:
         continue
-    by_setting = defaultdict(list)
+    by_setting = defaultdict(set)
     for u, v, k, d in G.out_edges(node, keys=True, data=True):
-        by_setting[d["setting"]].append((u, v, k))
+        by_setting[d["setting"]].add(d["group"])
     if len(by_setting) <= 1:
         continue
     best_setting = min(by_setting, key=lambda s: (len(by_setting[s]), -SETTINGS.index(s)))
-    G.remove_edges_from([e for s, edges in by_setting.items()
-                         if s != best_setting for e in edges])
+    G.remove_edges_from([(u, v, k) for u, v, k, d in G.out_edges(node, keys=True, data=True)
+                         if d["setting"] != best_setting])
 
 # Re-add siblings for all nodes using their now-selected setting
 for node in list(G.nodes()):
@@ -303,32 +310,22 @@ for node in list(G.nodes()):
         dst = v if (v in _full_reachable or v == "Destroyed") else "Lost"
         G.add_edge(node, dst, **d)
     G.remove_edges_from([(u, v, k) for u, v, k in G.out_edges(node, keys=True) if u == v])
-    by_dest = defaultdict(list)
-    for u, v, k, d in G.out_edges(node, keys=True, data=True):
-        by_dest[v].append((k, d.get("chance") or 0))
-    dest_scores = {dest: max(c for _, c in edges) * _full_reach.get(dest, 0.0)
-                   for dest, edges in by_dest.items()
-                   if dest in _valid_dests}
-    if not dest_scores:
+    gs = _group_scores(node, G, _full_reach)
+    gs = {gid: v for gid, v in gs.items() if v[1] in _valid_dests}
+    if not gs:
         continue
-    max_s = max(dest_scores.values())
-    tied = [dest for dest, s in dest_scores.items() if s == max_s]
-    best_dest = min(tied, key=lambda d: (_dist_now.get(d, float("inf")), d))
-    edges_to_remove = []
-    for dest, edges in by_dest.items():
-        if dest != best_dest:
-            edges_to_remove.extend((node, dest, k) for k, _ in edges)
-        else:
-            best_c = max(c for _, c in edges)
-            edges_to_remove.extend((node, dest, k) for k, c in edges if c < best_c)
-    G.remove_edges_from(edges_to_remove)
-    by_setting = defaultdict(list)
+    max_s = max(s for _, _, s in gs.values())
+    tied = [gid for gid, (_, primary, s) in gs.items() if s == max_s]
+    best_gid = min(tied, key=lambda gid: (_dist_now.get(gs[gid][1], float("inf")), gs[gid][1]))
+    G.remove_edges_from([(u, v, k) for u, v, k, d in G.out_edges(node, keys=True, data=True)
+                         if d["group"] != best_gid])
+    by_setting = defaultdict(set)
     for u, v, k, d in G.out_edges(node, keys=True, data=True):
-        by_setting[d["setting"]].append((u, v, k))
+        by_setting[d["setting"]].add(d["group"])
     if len(by_setting) > 1:
         best_setting = min(by_setting, key=lambda s: (len(by_setting[s]), -SETTINGS.index(s)))
-        G.remove_edges_from([e for s, edges in by_setting.items()
-                              if s != best_setting for e in edges])
+        G.remove_edges_from([(u, v, k) for u, v, k, d in G.out_edges(node, keys=True, data=True)
+                              if d["setting"] != best_setting])
 
 rev = G.reverse()
 keep = nx.descendants(rev, target) | {target}
@@ -379,12 +376,15 @@ for _ in range(1000):
     for node in _nodes:
         if node == target:
             continue
-        by_setting = defaultdict(list)
+        by_s_g = defaultdict(lambda: defaultdict(list))  # setting -> group -> [(r, chance, cnt)]
         for _, v, d in G.out_edges(node, data=True):
-            by_setting[d["setting"]].append((reach.get(v, 0.0), d.get("chance") or 0, d.get("count") or 1))
+            by_s_g[d["setting"]][d["group"]].append((reach.get(v, 0.0), d.get("chance") or 0, d.get("count") or 1))
         new[node] = 1.0 - np.prod([
-            1.0 - sum(c * (1.0 - (1.0 - r) ** cnt) for r, c, cnt in edges)
-            for edges in by_setting.values()
+            1.0 - sum(
+                members[0][1] * (1.0 - np.prod([(1.0 - r) ** cnt for r, _, cnt in members]))
+                for members in by_g.values()
+            )
+            for by_g in by_s_g.values()
         ])
     if max(abs(new[n] - reach[n]) for n in _nodes) < 1e-9:
         break
@@ -411,6 +411,8 @@ for node in _live:
             _A[i, _eidx[v]] -= c
         elif v == "Lost":
             _b[i] += c  # Lost items still cost 1 step each when processed
+        # Note: coproduct edges contribute their own chance*count terms correctly
+        # because they share the same chance as their primary but are separate edges
 print(f"Computing steps ({len(_live)} live nodes)...", flush=True)
 _x, _, rank, _ = np.linalg.lstsq(_A, _b, rcond=None)
 _f = {n: float(_x[_eidx[n]]) for n in _live}
@@ -420,9 +422,14 @@ _f = {n: float(_x[_eidx[n]]) for n in _live}
 if any(v <= 0 for v in _f.values()):
     import random as _rng
     _rng.seed(0)
-    _edges_by_node = defaultdict(list)
+    # Build group-aware edge structure: node -> [(group_id, chance, [(dest, count)])]
+    _groups_by_node = defaultdict(dict)  # node -> {gid: (chance, [(dest, count)])}
     for _u, _v, _d in G.edges(data=True):
-        _edges_by_node[_u].append((_v, _d.get("chance") or 0, _d.get("count") or 1))
+        gid = _d["group"]
+        if gid not in _groups_by_node[_u]:
+            _groups_by_node[_u][gid] = (_d.get("chance") or 0, [])
+        _groups_by_node[_u][gid][1].append((_v, _d.get("count") or 1))
+    _groups_list = {node: list(gdata.values()) for node, gdata in _groups_by_node.items()}
 
     def _simulate(start, n=10000):
         total_steps = 0
@@ -434,16 +441,17 @@ if any(v <= 0 for v in _f.values()):
                 if item == target:
                     successes += 1
                     break
-                if item in _dead or item not in _edges_by_node:
+                if item in _dead or item not in _groups_list:
                     break
                 r = _rng.random()
                 cum = 0.0
-                for _v, chance, count in _edges_by_node[item]:
+                for chance, members in _groups_list[item]:
                     cum += chance
                     if r < cum:
                         total_steps += 1
-                        for _ in range(count):
-                            queue.append(_v)
+                        for _v, count in members:
+                            for _ in range(count):
+                                queue.append(_v)
                         break
         return (total_steps / successes) if successes > 0 else float("inf")
 
@@ -672,10 +680,24 @@ for t in nx.draw_networkx_labels(G, pos, labels=node_labels, font_size=7, ax=ax)
     t.set_zorder(3)
 
 legend = [mpatches.Patch(color=c, label=s) for s, c in setting_colors.items()]
-ax.legend(handles=legend, loc="lower right")
-ax.set_title(f"Paths to: {target}")
+ax.legend(handles=legend, loc="upper right")
+ax.set_title(f"Paths to: {target}", y=0.98)
 ax.axis("off")
 plt.tight_layout()
-plt.savefig("graph_914.png", dpi=150)
-print("Saved graph_914.png")
+import os
+_graphs_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "graphs")
+os.makedirs(_graphs_dir, exist_ok=True)
+_fname = "graph_"
+if _include_admin:
+    _fname += "admin_"
+if _arg_items is not None:
+    _fname += f"items_{int(_arg_items)}_"
+if _arg_steps is not None:
+    _fname += f"steps_{int(_arg_steps)}_"
+if _arg_items is None and _arg_steps is None:
+    _fname += "full_"
+_fname += re.sub(r'[^a-z0-9]+', '_', target.lower()).strip('_') + ".png"
+_fpath = os.path.join(_graphs_dir, _fname)
+plt.savefig(_fpath, dpi=150)
+print(f"Saved {_fpath}")
 plt.show()

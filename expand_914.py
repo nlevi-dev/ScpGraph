@@ -52,10 +52,10 @@ def parse_cell(cell: str, inp: str) -> list[tuple[str, float]]:
             result.append(("Destroyed", chance))
         elif item == "Multiple Items":
             result.append((pd.NA, pd.NA))
-        elif inp == "A7" and item == "Flashbang Grenade" and (pd.isna(chance) or chance <= 0):
-            result.append(("Flashbang Grenade", 0.5))
         elif inp == "A7" and item == ".44 Revolver" and (pd.isna(chance) or chance <= 0):
-            result.append((".44 Revolver", 0.5))
+            result.append((".44 Revolver, (+Flashbang Grenade)", 1.0))
+        elif inp == "A7" and item == "Flashbang Grenade" and (pd.isna(chance) or chance <= 0):
+            pass  # encoded as (+Flashbang Grenade) modifier on the .44 Revolver row
         elif item == "Randomized Attachments":
             result.append((inp, chance))
         else:
@@ -110,7 +110,7 @@ for _, row in df.iterrows():
             new_row[f"{col} Chance"] = chance
         rows.append(new_row)
 
-TRAILING_MOD_RE = re.compile(r"^(.+?)[,\s]\s*(\((?:x\d+|Refueled|Damaged|Recharged|\d+ rounds?)\))$", re.IGNORECASE)
+TRAILING_MOD_RE = re.compile(r"^(.+?)[,\s]\s*(\((?:x\d+|Refueled|Damaged|Recharged|\d+ rounds?|\+[^)]+)\))$", re.IGNORECASE)
 
 out = pd.DataFrame(rows, columns=["Input", "admin_only"] + [c for col in SETTING_COLS for c in (f"{col} Item", f"{col} Chance")])
 
