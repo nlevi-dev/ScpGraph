@@ -1,3 +1,5 @@
+import base64
+import gzip
 import os
 import re
 import pandas as pd
@@ -15,26 +17,23 @@ for _, r in df.iterrows():
     if not os.path.exists(svg_path):
         print(f"Missing {svg_path}, skipping")
         continue
-    with open(svg_path) as f:
-        svg = f.read()
-    # strip XML declaration and doctype
-    svg = re.sub(r'<\?xml[^?]*\?>\s*', '', svg)
-    svg = re.sub(r'<!DOCTYPE[^>]*>\s*', '', svg)
-    # convert pt width to px (1pt = 1.333px) and set as pixel width so browser zoom works
-    m = re.search(r'viewBox="0 0 ([\d.]+)', svg)
-    svg = re.sub(r'(<svg[^>]+)width="[^"]*"', r'\1', svg)
-    svg = re.sub(r'(<svg[^>]+)height="[^"]*"', r'\1', svg)
-    svg = re.sub(r'\s+', ' ', svg)
+
+    with open(svg_path, "rb") as f_in:
+        gz_b64 = base64.b64encode(gzip.compress(f_in.read())).decode()
 
     html = ("<!DOCTYPE html><html lang=\"en\"><head><meta charset=\"UTF-8\">"
             f"<title>SCP-914: {name}</title>"
             "<style>body{font-family:sans-serif;margin:1rem}a{color:#2980b9}"
             "svg{width:1280px;height:auto}</style></head><body>"
             f"<p><a href=\"../index.html\">&#8592; Back to index</a></p>"
-            f"<h1>{name}</h1>{svg}"
-            "<script>var s=document.querySelector('svg');"
+            f"<h1>{name}</h1><div id=g></div>"
+            f"<script>var d='{gz_b64}';"
+            "var b=Uint8Array.from(atob(d),c=>c.charCodeAt(0));"
+            "new Response(new Blob([b]).stream().pipeThrough(new DecompressionStream('gzip'))).text()"
+            ".then(t=>{document.getElementById('g').innerHTML=t;"
+            "var s=document.querySelector('svg');"
             "function r(){s.style.width=Math.max(window.innerWidth*window.devicePixelRatio,window.innerWidth)-32+'px'}"
-            "window.addEventListener('resize',r);screen.orientation.addEventListener('change',r);r();"
+            "window.addEventListener('resize',r);screen.orientation.addEventListener('change',r);r();})"
             "</script></body></html>")
     out = f"index/items/{slug(name)}.html"
     with open(out, "w") as f:
