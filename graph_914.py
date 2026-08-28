@@ -865,7 +865,9 @@ def _fmt_node(n):
     ae = avg_edges.get(n, float("inf"))
     ai_str = f"{ai:.1f}" if ai != float("inf") else "∞"
     ae_str = f"{ae:.1f}" if ae != float("inf") else "∞"
-    return f"{n}\n{p*100:.1f}% | {ai_str} items | {ae_str} steps"
+    first_try = score.get(n, 0)
+    depth = layers_depth.get(n, 0)
+    return f"{n}\n{p*100:.1f}% | {ai_str} items | {ae_str} steps\n1st try: {first_try*100:.1f}% ({depth} steps)"
 node_labels = {n: _fmt_node(n) for n in G.nodes()}
 for t in nx.draw_networkx_labels(G, pos, labels=node_labels, font_size=7, ax=ax).values():
     t.set_bbox(dict(boxstyle="round,pad=0.2", facecolor="white", alpha=0.6, edgecolor="none"))

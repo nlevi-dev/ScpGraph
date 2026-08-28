@@ -43,7 +43,10 @@ desc = ("<p>This site shows the most efficient crafting paths through <b>SCP-914
         "&bull; <b>Items</b> &mdash; how many copies of this item you need on average to "
         "get one target (1 &divide; reach).<br>"
         "&bull; <b>Steps</b> &mdash; the expected total number of 914 uses until the "
-        "target appears, including failed attempts and all items consumed along the way.</p>")
+        "target appears, including failed attempts and all items consumed along the way.<br>"
+        "&bull; <b>1st try</b> &mdash; the probability of reaching the target on a single "
+        "uninterrupted run along the optimal path (product of all edge chances), and the "
+        "number of 914 uses that path takes.</p>")
 github_note = ("<p style=\"font-size:.9em;color:#555\">Interested in the technical groundwork? "
                "Check out the source on <a href=\"https://github.com/nlevi-dev/ScpGraph\" target=\"_blank\">GitHub</a>.</p>")
 html = ("<!DOCTYPE html><html lang=\"en\"><head><meta charset=\"UTF-8\">"

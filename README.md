@@ -176,9 +176,12 @@ Non-target, non-terminal nodes are labelled:
 ```
 Item Name
 reach% | avg_items items | avg_steps steps
+1st try: X.X% (N steps)
 ```
 
-Example: `Scientist Keycard\n45.2% | 2.2 items | 3.8 steps`
+Example: `Scientist Keycard\n45.2% | 2.2 items | 3.8 steps\n1st try: 30.0% (2 steps)`
+
+The **1st try** line shows the probability of reaching the target on a single uninterrupted run along the optimal path (the product of all edge chances on that path), and the number of 914 uses that path takes.
 
 Labels are rendered with a semi-transparent white rounded background box for readability.
 
